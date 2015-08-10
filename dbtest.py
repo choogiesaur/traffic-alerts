@@ -1,4 +1,5 @@
 import cx_Oracle
+from datetime import date, timedelta
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net
@@ -65,6 +66,7 @@ def check_pktloss(cursor):
 
 	for row in cursor:
 
+		date 		= row[0] #save as datetime obj, not string
 		trunk 		= row[1]
 		direction 	= str(row[2])
 		completed 	= row[4]
@@ -113,11 +115,11 @@ curs.execute('SELECT tstamp, tg_id, direction, attempts, answered, failed, otg_h
 NOTE: for SYSDATE - (2/24) to SYSDATE - (1/24), I think this should hit the 2nd to last hour properly
 E.G: If current time is 12:15, should look at hour 10-11.
 """
-curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
+print(get_sysdate(curs))
+curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp DESC')
 
 print_fields(curs)
-print(get_sysdate(curs))
 print_hpl_rows(curs)
-#check_pktloss(curs)
+check_pktloss(curs)
 
 db.close()

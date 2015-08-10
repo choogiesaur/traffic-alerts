@@ -3,4 +3,4 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 
 Dependencies: Python3, cx_Oracle
 Usage: 
-python dbtest.py
+> python dbtest.py

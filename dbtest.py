@@ -4,7 +4,10 @@ import cx_Oracle
 #ex02-scan.prod.idt.net
 #ossdb.db.idt.net 			<- service_name
 
+#takes a cx_Oracle cursor object and returns current SYSDATE of associated db
 def get_sysdate(cursor):
+	cursor.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
+	return(str(cursor.fetchone()[0]))
 
 #takes a cx_Oracle cursor object and prints the fields that are currently selected
 def print_fields(cursor):
@@ -113,6 +116,7 @@ E.G: If current time is 12:15, should look at hour 10-11.
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
 
 print_fields(curs)
+print(get_sysdate(curs))
 print_hpl_rows(curs)
 #check_pktloss(curs)
 

@@ -1,2 +1,7 @@
 if time is 12:15 	-> alert system should look at hour 10 - 11
 if time is 1:15 	-> alert system should look at hour 11 - 12
+
+using get_sysdate returns db time, which matches time on OS of my laptop (EST)
+returned rows, however, show 3 previous hours in GMT
+(e.g. my laptop is now 2:55 <=> 14:55, doing SELECT sysdate, tstamp gives me hours 15, 16, 17)
+and gmt is EST + 4, so right now @ 15:05 EST it is 19:05 GMT

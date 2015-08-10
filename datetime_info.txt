@@ -1,0 +1,2 @@
+if time is 12:15 	-> alert system should look at hour 10 - 11
+if time is 1:15 	-> alert system should look at hour 11 - 12

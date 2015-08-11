@@ -99,7 +99,8 @@ def check_pktloss(cursor):
 			if completed > 100 and total_hlpkt_calls / completed > 0.15:
 				offenders.append([trunk, (total_hlpkt_calls/completed) * 100])
 
-	print("There are " + str(len(offenders)) + " offenders with high packet loss on 15% or more completed calls")
+	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
+	print("---------------------------------------------------------------------------")
 	
 	#print list of tg_id's
 	for pair in offenders:

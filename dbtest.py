@@ -1,5 +1,5 @@
 import cx_Oracle
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net
@@ -46,9 +46,9 @@ def print_hpl_rows(cursor):
 			hlpkt_ratio = total_hlpkt_calls / answered
 
 		if count < num_rows:
-			print('trunk: ' + str(trunk) + '\n' \
-			'Date: ' + date + '\n' \
-			'direction: ' + direction + '\n' \
+			print('trunk: ' 	+ str(trunk) + '\n' \
+			'Date: ' 			+ date + '\n' \
+			'direction: ' 		+ direction + '\n' \
 			'completed calls: ' + str(answered) + '\n' \
 			'otg_hlpkt_calls: ' + str(otg_hlpkt_calls) + '\n' \
 			'dtg_hlpkt_calls: ' + str(dtg_hlpkt_calls) + '\n' \
@@ -59,7 +59,7 @@ def print_hpl_rows(cursor):
 			break
 
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold
-def check_pktloss(cursor):
+def check_pktloss(cursor, sysdate):
 	
 	#list of tg_id's with HPL on 15% or more of calls
 	offenders 	= []
@@ -73,7 +73,9 @@ def check_pktloss(cursor):
 		otg_hlpkt_calls 	= row[6]
 		dtg_hlpkt_calls 	= row[7]
 		total_hlpkt_calls	= 0
-		#print(str(tg_id)+', '+str(direction)+', completed: '+str(completed)+', '+str())
+
+		sysdate = datetime.now()
+		gmt = sysdate + datetime.timedelta(hours=4) # for local time on summarizer server
 
 		if direction == 'I':
 			total_hlpkt_calls = otg_hlpkt_calls
@@ -115,11 +117,14 @@ curs.execute('SELECT tstamp, tg_id, direction, attempts, answered, failed, otg_h
 NOTE: for SYSDATE - (2/24) to SYSDATE - (1/24), I think this should hit the 2nd to last hour properly
 E.G: If current time is 12:15, should look at hour 10-11.
 """
-print(get_sysdate(curs))
+
+sysdate = get_sysdate(curs)
+#print(sysdate)
+
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp DESC')
 
-print_fields(curs)
-print_hpl_rows(curs)
-check_pktloss(curs)
+#print_fields(curs)
+#print_hpl_rows(curs)
+#check_pktloss(curs, sysdate)
 
 db.close()

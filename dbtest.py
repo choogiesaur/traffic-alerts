@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 #ossdb.db.idt.net 			<- service_name
 
 #takes a cx_Oracle cursor object and returns current SYSDATE of associated db
-#can deprecate this and just use datetime.now()
+#!!! can deprecate this and just use datetime.now()
 def get_sysdate(cursor):
 	cursor.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
 	return(cursor.fetchone()[0])
@@ -61,7 +61,6 @@ def print_hpl_rows(cursor):
 			'completed calls: ' + str(answered) + '\n' \
 			'otg_hlpkt_calls: ' + str(otg_hlpkt_calls) + '\n' \
 			'dtg_hlpkt_calls: ' + str(dtg_hlpkt_calls) + '\n' \
-			'ttl_hlpkt_calls: ' + str(total_hlpkt_calls) + '\n' \
 			'percent of calls w/ high pkt loss: ' + str(hlpkt_ratio * 100) + '%\n')
 			count += 1
 		else:
@@ -118,19 +117,10 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-#selects timestamp, tg_id, direction...etc from previous hour (first 1000 results ordered by total HPL calls) for OLD TABLE.
-"""
-curs.execute('SELECT tstamp, tg_id, direction, attempts, answered, failed, otg_hlpkt_calls, dtg_hlpkt_calls, (otg_hlpkt_calls+dtg_hlpkt_calls) AS total_hlpkt_calls \
-				FROM ossdb.cs_tg_hour \
-				WHERE tstamp > SYSDATE - (2/24) \
-				AND tstamp < SYSDATE - (1/24) \
-				ORDER BY total_hlpkt_calls DESC')
-#NOTE: for SYSDATE - (2/24) to SYSDATE - (1/24), I think this should hit the 2nd to last hour properly
-#E.G: If current time is 12:15, should look at hour 10-11.
-"""
-
 print(datetime.now())
-curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp DESC')
+
+#fetch rows to be examined
+curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 
 print_fields(curs)
 print_hpl_rows(curs)

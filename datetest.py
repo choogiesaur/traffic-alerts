@@ -19,18 +19,9 @@ curs.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
 sysdate = datetime.now();
 print(sysdate)
 
-shiftdate = sysdate + timedelta(hours=4)
-print(shiftdate)
+gmt_m2 = sysdate + timedelta(hours=2)
+print(gmt_m2)
 
-tempdate = shiftdate + timedelta(hours=-2)
-print(tempdate)
+floored = gmt_m2.replace(minute=0,second=0,microsecond=0)
+print(floored)
 
-hms = timedelta(hours=20,minutes=11,seconds=13)
-print(hms)
-
-resolution=timedelta(seconds=10)
-
-print(timedelta(seconds=hms.seconds%resolution.seconds))
-
-resolution = timedelta(hours=1)
-print(timedelta(seconds=hms.seconds%resolution.seconds))

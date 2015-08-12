@@ -139,16 +139,12 @@ def alert_pktloss(cursor):
 		completed 			= row[4]
 		otg_hlpkt_calls 	= row[6]
 		dtg_hlpkt_calls 	= row[7]
-		total_hlpkt_calls	= 0
+		
+		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
+		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
 
 		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
-
-			if direction == 'I':
-				total_hlpkt_calls = otg_hlpkt_calls
-
-			elif direction == 'O':
-				total_hlpkt_calls = dtg_hlpkt_calls
 			
 			#after there are at least <100> completed calls: if more than 15% of calls have HPL, add to offenders list
 			if completed > 100 and total_hlpkt_calls / completed > 0.15:
@@ -158,7 +154,7 @@ def alert_pktloss(cursor):
 	#print_hpl_offenders(offenders)
 	alert = gen_hpl_alert(offenders)
 	print(alert)
-	send_email(alert, recipients)
+	#send_email(alert, recipients)
 
 """------------"""
 """MAIN PROGRAM"""

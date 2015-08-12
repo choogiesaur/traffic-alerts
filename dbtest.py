@@ -6,12 +6,6 @@ import smtplib
 #ex02-scan.prod.idt.net
 #ossdb.db.idt.net 			<- service_name
 
-#takes a cx_Oracle cursor object and returns current SYSDATE of associated db
-#!!! can deprecate this and just use datetime.now()
-def get_sysdate(cursor):
-	cursor.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
-	return(cursor.fetchone()[0])
-
 #takes a datetime.datetime object, translates to GMT, sets back 2 hours, and floors to nearest hour
 def get_timeframe(date):
 	#convert to gmt. keep as multiple lines to allow time zone flexibility
@@ -42,14 +36,9 @@ def print_hpl_rows(cursor):
 		failed 				= row[5]
 		otg_hlpkt_calls 	= row[6]
 		dtg_hlpkt_calls 	= row[7]
-		total_hlpkt_calls	= 0
 		
-		#if inbound, use OTG for number of high packet loss calls
-		if direction == 'I':
-			total_hlpkt_calls = otg_hlpkt_calls
-		#if outbound, use DTG for number of high packet loss calls
-		elif direction == 'O':
-			total_hlpkt_calls = dtg_hlpkt_calls
+		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
+		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
 
 		hlpkt_ratio = 0
 		if answered > 0:
@@ -66,19 +55,6 @@ def print_hpl_rows(cursor):
 			count += 1
 		else:
 			break
-
-"""can deprecate, just print result of gen_hpl_alert"""
-#given list of offenders (list of (trunk, percentage) tuples), prints list
-def print_hpl_offenders(offenders):
-	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
-	print("---------------------------------------------------------------------------")
-	
-	#sort by percentage. switch to tup[0] to sort by trunk name
-	offenders.sort(key=lambda tup: tup[1])
-
-	#print list of trunks
-	for pair in offenders:
-		print("trunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1])
 
 #given list of offenders (list of (trunk, percentage) tuples), generates alert message
 def gen_hpl_alert(offenders):

@@ -16,10 +16,10 @@ def get_timeframe(date):
 #takes a cx_Oracle cursor object and prints the fields that are currently selected
 def print_fields(cursor):
 	desc = cursor.description
-	print('--- FIELDS: ---')
+	print '--- FIELDS: ---'
 	for row in desc:
-		print(row[0])
-	print()
+		print row[0]
+	print ''
 
 #takes a cx_Oracle cursor object and prints the rows associated with high packet loss (hpl)
 def print_hpl_rows(cursor):
@@ -45,13 +45,13 @@ def print_hpl_rows(cursor):
 			hlpkt_ratio = total_hlpkt_calls / answered
 
 		if count < num_rows:
-			print('trunk: ' 	+ str(trunk) + '\n' \
+			print 'trunk: ' 	+ str(trunk) + '\n' \
 			'Date: ' 			+ date + '\n' \
 			'direction: ' 		+ direction + '\n' \
 			'completed calls: ' + str(answered) + '\n' \
 			'otg_hlpkt_calls: ' + str(otg_hlpkt_calls) + '\n' \
 			'dtg_hlpkt_calls: ' + str(dtg_hlpkt_calls) + '\n' \
-			'percent of calls w/ high pkt loss: ' + str(hlpkt_ratio * 100) + '%\n')
+			'percent of calls w/ high pkt loss: ' + str(hlpkt_ratio * 100) + '%\n'
 			count += 1
 		else:
 			break
@@ -91,9 +91,9 @@ def send_email(msg, recipients):
 
 		try:
 		    server.sendmail(gmail_sender, [recipient], BODY)
-		    print ('email sent to: ' + recipient)
+		    print 'email sent to: ' + recipient
 		except:
-		    print ('error sending mail')
+		    print 'error sending mail'
 
 	server.quit()
 
@@ -129,7 +129,7 @@ def alert_pktloss(cursor):
 	#print list of offenders
 	#print_hpl_offenders(offenders)
 	alert = gen_hpl_alert(offenders)
-	print(alert)
+	print alert
 	#send_email(alert, recipients)
 
 """------------"""
@@ -148,7 +148,7 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-print(datetime.now())
+print datetime.now()
 
 #fetch rows to be examined
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')

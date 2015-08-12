@@ -85,8 +85,11 @@ def gen_hpl_alert(offenders):
 	
 	msg = 'Alert: High packet loss on greater than 15% of calls from the following trunks:\n'
 
+	#sort by percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[1])
+
 	for pair in offenders:
-		msg += "\ntrunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1]
+		msg = msg + "\ntrunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1]
 
 	return msg
 
@@ -95,7 +98,7 @@ def send_email(msg, recipients):
 
 	subject = 'Traffic Summarizer Alerts: ' + str(datetime.now())
 
-	# Gmail Sign In
+	# this is the email I created for the alerts
 	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
 	gmail_passwd = 'idtengineering123!'
 
@@ -121,7 +124,7 @@ def send_email(msg, recipients):
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'richard.lee@idt.net']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
 
 	#list of tg_id's with HPL on 15% or more of calls
 	offenders 	= []
@@ -159,7 +162,7 @@ def alert_pktloss(cursor):
 
 """------------"""
 """MAIN PROGRAM"""
-"""------------"""	
+"""------------"""
 
 #info for our db
 host 	= 'ex01-scan.prod.idt.net'
@@ -179,7 +182,7 @@ print(datetime.now())
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 
 #print_fields(curs)
-#print_hpl_rows(curs) """print some example rows"""
+#print_hpl_rows(curs)
 alert_pktloss(curs)
 
 db.close()

@@ -20,6 +20,14 @@ $RECYCLE.BIN/
 # Python cache shiet?
 *.pyc
 
+#unwanted files
+datetest.py
+dbtest_old.py
+dbtest_timeframe.py
+emailtest_465.py
+emailtest_587.py
+emailtest.py
+
 # =========================
 # Operating System Files
 # =========================

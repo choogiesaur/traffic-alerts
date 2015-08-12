@@ -1,5 +1,6 @@
 import cx_Oracle
 from datetime import date, datetime, timedelta
+import smtplib
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net
@@ -66,12 +67,28 @@ def print_hpl_rows(cursor):
 		else:
 			break
 
+#given list of offenders (list of (trunk, percentage) tuples), prints list
+def print_hpl_offenders(offenders):
+	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
+	print("---------------------------------------------------------------------------")
+	
+	#sort by percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[1])
+
+	#print list of trunks
+	for pair in offenders:
+		print("trunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1])
+
+def gen_alert(offenders):
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_pktloss(cursor):
 	
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+
 	#list of tg_id's with HPL on 15% or more of calls
 	offenders 	= []
-
 	#calculate time from which records will be fetched. OS time => GMT => 2 hours before => floored to last hour
 	timeframe = get_timeframe(datetime.now())
 
@@ -98,15 +115,12 @@ def alert_pktloss(cursor):
 			if completed > 100 and total_hlpkt_calls / completed > 0.15:
 				offenders.append([trunk, (total_hlpkt_calls/completed) * 100])
 
-	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
-	print("---------------------------------------------------------------------------")
-	
-	#sort by percentage
-	offenders.sort(key=lambda tup: tup[1])
+	#print list of offenders
+	print_hpl_offenders(offenders)
 
-	#print list of tg_id's
-	for pair in offenders:
-		print("trunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1])
+"""------------"""
+"""MAIN PROGRAM"""
+"""------------"""	
 
 #info for our db
 host 	= 'ex01-scan.prod.idt.net'
@@ -125,8 +139,8 @@ print(datetime.now())
 #fetch rows to be examined
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 
-print_fields(curs)
-print_hpl_rows(curs)
+#print_fields(curs)
+#print_hpl_rows(curs) """print some example rows"""
 alert_pktloss(curs)
 
 db.close()

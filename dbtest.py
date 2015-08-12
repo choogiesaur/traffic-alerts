@@ -67,12 +67,12 @@ def print_hpl_rows(cursor):
 			break
 
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
-def check_pktloss(cursor):
+def alert_pktloss(cursor):
 	
 	#list of tg_id's with HPL on 15% or more of calls
 	offenders 	= []
 
-	#calculate time from which records will be fetched. OS time => GMT => 2 hours before
+	#calculate time from which records will be fetched. OS time => GMT => 2 hours before => floored to last hour
 	timeframe = get_timeframe(datetime.now())
 
 	for row in cursor:
@@ -85,7 +85,7 @@ def check_pktloss(cursor):
 		dtg_hlpkt_calls 	= row[7]
 		total_hlpkt_calls	= 0
 
-		#only look at records from desired hour
+		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
 
 			if direction == 'I':
@@ -101,6 +101,9 @@ def check_pktloss(cursor):
 	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
 	print("---------------------------------------------------------------------------")
 	
+	#sort by percentage
+	offenders.sort(key=lambda tup: tup[1])
+
 	#print list of tg_id's
 	for pair in offenders:
 		print("trunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1])
@@ -124,6 +127,6 @@ curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 
 print_fields(curs)
 print_hpl_rows(curs)
-check_pktloss(curs)
+alert_pktloss(curs)
 
 db.close()

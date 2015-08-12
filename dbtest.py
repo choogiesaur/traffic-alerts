@@ -67,6 +67,7 @@ def print_hpl_rows(cursor):
 		else:
 			break
 
+"""can deprecate, just print result of gen_hpl_alert"""
 #given list of offenders (list of (trunk, percentage) tuples), prints list
 def print_hpl_offenders(offenders):
 	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
@@ -79,13 +80,48 @@ def print_hpl_offenders(offenders):
 	for pair in offenders:
 		print("trunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1])
 
-def gen_alert(offenders):
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+#given list of offenders (list of (trunk, percentage) tuples), generates alert message
+def gen_hpl_alert(offenders):
+	
+	msg = 'Alert: High packet loss on greater than 15% of calls from the following trunks:\n'
+
+	for pair in offenders:
+		msg += "\ntrunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1]
+
+	return msg
+
+#takes message and recipients and sends via gmail SMTP
+def send_email(msg, recipients):
+
+	subject = 'Traffic Summarizer Alerts: ' + str(datetime.now())
+
+	# Gmail Sign In
+	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
+	gmail_passwd = 'idtengineering123!'
+
+	server = smtplib.SMTP_SSL('smtp.gmail.com:465')
+	server.ehlo()
+	server.login(gmail_sender, gmail_passwd)
+
+	for recipient in recipients:
+
+		BODY = '\r\n'.join(['To: %s' % recipient,
+		                    'From: %s' % gmail_sender,
+		                    'Subject: %s' % subject,
+		                    '', msg])
+
+		try:
+		    server.sendmail(gmail_sender, [recipient], BODY)
+		    print ('email sent to: ' + recipient)
+		except:
+		    print ('error sending mail')
+
+	server.quit()
 
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'richard.lee@idt.net']
 
 	#list of tg_id's with HPL on 15% or more of calls
 	offenders 	= []
@@ -116,7 +152,10 @@ def alert_pktloss(cursor):
 				offenders.append([trunk, (total_hlpkt_calls/completed) * 100])
 
 	#print list of offenders
-	print_hpl_offenders(offenders)
+	#print_hpl_offenders(offenders)
+	alert = gen_hpl_alert(offenders)
+	print(alert)
+	send_email(alert, recipients)
 
 """------------"""
 """MAIN PROGRAM"""

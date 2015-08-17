@@ -1,5 +1,6 @@
+from __future__ import division
 import cx_Oracle
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import smtplib
 
 #ex01-scan.prod-idt.net 	<- host
@@ -59,13 +60,13 @@ def print_hpl_rows(cursor):
 #given list of offenders (list of (trunk, percentage) tuples), generates alert message
 def gen_hpl_alert(offenders):
 	
-	msg = 'Alert: High packet loss on greater than 15% of calls from the following trunks:\n'
+	msg = 'Alert: High packet loss on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
 
 	#sort by percentage. switch to tup[0] to sort by trunk name
 	offenders.sort(key=lambda tup: tup[1])
 
 	for pair in offenders:
-		msg = msg + "\ntrunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1]
+		msg += "\ntrunk name: " + str(pair[0]) + "\npercentage: " + "%.2f%%\n" % pair[1]
 
 	return msg
 
@@ -84,13 +85,13 @@ def send_email(msg, recipients):
 
 	for recipient in recipients:
 
-		BODY = '\r\n'.join(['To: %s' % recipient,
+		body = '\r\n'.join(['To: %s' % recipient,
 		                    'From: %s' % gmail_sender,
 		                    'Subject: %s' % subject,
 		                    '', msg])
 
 		try:
-		    server.sendmail(gmail_sender, [recipient], BODY)
+		    server.sendmail(gmail_sender, [recipient], body)
 		    print ('email sent to: ' + recipient)
 		except:
 		    print ('error sending mail')
@@ -100,10 +101,11 @@ def send_email(msg, recipients):
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net']
 
-	#list of tg_id's with HPL on 15% or more of calls
+	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
+
 	#calculate time from which records will be fetched. OS time => GMT => 2 hours before => floored to last hour
 	timeframe = get_timeframe(datetime.now())
 
@@ -122,19 +124,20 @@ def alert_pktloss(cursor):
 		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
 			
-			#after there are at least <100> completed calls: if more than 15% of calls have HPL, add to offenders list
-			if completed > 100 and total_hlpkt_calls / completed > 0.15:
+			#if 15% or more of calls have HPL, add to offenders list
+			if (total_hlpkt_calls / completed) >= 0.15:
 				offenders.append([trunk, (total_hlpkt_calls/completed) * 100])
 
 	#print list of offenders
-	#print_hpl_offenders(offenders)
 	alert = gen_hpl_alert(offenders)
 	print(alert)
-	#send_email(alert, recipients)
+	send_email(alert, recipients)
 
 """------------"""
 """MAIN PROGRAM"""
 """------------"""
+
+print(datetime.now())
 
 #info for our db
 host 	= 'ex01-scan.prod.idt.net'
@@ -147,8 +150,6 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
-
-print(datetime.now())
 
 #fetch rows to be examined
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')

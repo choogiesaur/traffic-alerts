@@ -11,4 +11,4 @@ Usage:
 
 Notes: 
 - Some of the formatting looks clean in a text editor but a bit iffy on GitHub.
-- Meant for python 3, but is able to run on vetools' python 2.6 with __future__ import
+- Meant for python 3, but is able to run on vetools' python 2.6 with ____future____ import

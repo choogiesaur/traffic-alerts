@@ -6,9 +6,6 @@ Dependencies: **Python3**, **cx_Oracle**
 Currently implemented alerts:
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert to FaultDesk and Engineering. Number of completed calls > 1000.
 
-
-Dependencies: **Python3**, **cx_Oracle**
-
 Usage: 
 > python dbtest.py
 

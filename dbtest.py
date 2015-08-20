@@ -21,52 +21,10 @@ def get_timeframe(date):
 	gmt_m2 	= gmt 	+ timedelta(hours=-2)
 	return gmt_m2.replace(minute=0,second=0,microsecond=0)
 
-#takes a cx_Oracle cursor object and prints the fields that are currently selected
-def print_fields(cursor):
-	desc = cursor.description
-	print('--- FIELDS: ---')
-	for row in desc:
-		print(row[0])
-	print()
-
-#takes a cx_Oracle cursor object and prints the rows associated with high packet loss (hpl) DEPRECATED/TESTING
-def print_hpl_rows(cursor):
-	count = 0
-	#print some example rows
-	num_rows = int(input('Enter number of rows to print: '))
-
-	for row in cursor:
-		date 				= str(row[0])
-		trunk 				= row[1]
-		direction 			= str(row[2])
-		attempts 			= row[3]
-		answered 			= row[4]
-		failed 				= row[5]
-		otg_hlpkt_calls 	= row[6]
-		dtg_hlpkt_calls 	= row[7]
-		
-		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
-		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
-
-		hlpkt_ratio = 0
-		if answered > 0:
-			hlpkt_ratio = total_hlpkt_calls / answered
-
-		if count < num_rows:
-			print('trunk: ' 	+ str(trunk) + '\n' \
-			'Date: ' 			+ date + '\n' \
-			'direction: ' 		+ direction + '\n' \
-			'completed calls: ' + str(answered) + '\n' \
-			'otg_hlpkt_calls: ' + str(otg_hlpkt_calls) + '\n' \
-			'dtg_hlpkt_calls: ' + str(dtg_hlpkt_calls) + '\n' \
-			'percent of calls w/ high pkt loss: ' + str(hlpkt_ratio * 100) + '%\n')
-			count += 1
-		else:
-			break
-
 #takes message and recipients and sends via gmail SMTP
 def send_email(subject, msg, recipients):
 
+	#remember to change the time to the actual time the report is running for
 	subject += str(datetime.now().replace(minute=0,second=0,microsecond=0))
 
 	# this is the email I created for the alerts
@@ -91,6 +49,10 @@ def send_email(subject, msg, recipients):
 		    print ('error sending mail')
 
 	server.quit()
+
+"""-------------------------------"""
+"""Code for High Packet Loss alert"""
+"""-------------------------------"""
 
 #given list of offenders (list of (trunk, percentage) tuples), generates alert message
 def gen_hpl_alert(offenders):
@@ -144,7 +106,28 @@ def alert_pktloss(cursor):
 	#print alert to terminal, then send email to recipients
 	alert = gen_hpl_alert(offenders)
 	print(alert)
-	send_email('High Packet Loss Alert: ', alert, recipients)
+	send_email('Alert: High Packet Loss ', alert, recipients)
+
+"""--------------------------------"""
+"""Code for Route-advanceable alert"""
+"""--------------------------------"""
+
+#given list of offenders (list of (trunk, percentage) tuples), generates alert message
+def gen_rteadv_alert(offenders):
+	
+	msg = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
+
+	#sort by percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[3])
+
+	for row in offenders:
+		msg += "\ntrunk name: " 		+ str(row[0]) \
+		 	+  "\n  attempts: " 		+ str(row[1]) \
+		 	+  "\n  number of route-advanceable calls: " + str(row[2]) \
+		 	+  "\n  percentage of attempts that were route-advanceable: " + "%.2f%%" % row[3] \
+		 	+  "\n  avg time to signal route-advanceable SIP response: "  + "%.2f seconds\n" % row[4]
+
+	return msg
 
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_rteadv(cursor):
@@ -164,12 +147,23 @@ def alert_rteadv(cursor):
 		direction 			= str(row[2])
 		attempts 			= row[3]
 		answered			= row[4]
-		failed				= row[5]
+		#failed				= row[5]
 		tdra_count			= row[8]
-		tdra_total			= row[9]
+		#tdra_total			= row[9]
 		tdra_avg			= row[10]
 
-		print(row)
+		#only look at records from desired hour (2 hours before)
+		if date == timeframe:
+
+			#minimum 100 route advanceable calls and >= 20% of all attempts are route advanceable,
+			#if avg time to signal route advanceable sip response is >= 6 seconds, generate alert
+			if (tdra_count / attempts) >= 0.20 and tdra_avg >= 6:
+				offenders.append([trunk, attempts, tdra_count, (tdra_count / attempts) * 100 ,tdra_avg])
+
+	#print alert to terminal, then send email to recipients
+	alert = gen_rteadv_alert(offenders)
+	print(alert)
+	send_email('Alert: Route Advanceable SIP Response ', alert, recipients)
 
 """------------"""
 """MAIN PROGRAM"""
@@ -189,12 +183,16 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
+#"""
 #fetch rows to be examined then perform the High Packet Loss check
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
+#"""
 
+#"""
 #fetch rows to be examined then perform the route advanceable check
-curs.execute('SELECT * FROM ossdb.v_tg_tdra ORDER BY tdra_avg DESC')
-#alert_rteadv(curs)
+curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
+alert_rteadv(curs)
+#"""
 
 db.close()

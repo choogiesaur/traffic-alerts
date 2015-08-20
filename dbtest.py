@@ -23,6 +23,22 @@ def get_timeframe(date):
 	gmt_m2 	= gmt 	+ timedelta(hours=-2)
 	return gmt_m2.replace(minute=0,second=0,microsecond=0)
 
+#given time, trunk generates the url for the trunk usage w/ dest page
+def gen_url(time, trunk):
+
+	#example: http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=2015-08-20_10&edt=2015-08-20_11&otg=LEVEL3LAC
+
+	year 	= str(time.year)
+	month	= '0' + str(time.month)		if time.month 	< 10  else str(time.month)
+	day		= '0' + str(time.day)		if time.day   	< 10  else str(time.day)
+	s_hour 	= '0' + str(time.hour)		if time.hour  	< 10  else str(time.hour)
+	e_hour	= '0' + str(time.hour+1)	if time.hour+1  < 10  else str(time.hour)
+
+	url 	= "http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s&otg=%s" \
+			% (year, month, day, s_hour, year, month, day, e_hour, trunk)
+
+	return url 
+
 #takes message and recipients and sends via gmail SMTP
 def send_email(subject, msg, recipients):
 
@@ -186,16 +202,18 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-#"""
+"""
 #fetch rows to be examined then perform the High Packet Loss check
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
-#"""
+"""
 
-#"""
+"""
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 alert_rteadv(curs)
-#"""
+"""
+
+print(gen_url(datetime.now(), 'LolOlOlOl'))
 
 db.close()

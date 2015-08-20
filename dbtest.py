@@ -64,25 +64,10 @@ def print_hpl_rows(cursor):
 		else:
 			break
 
-#given list of offenders (list of (trunk, percentage) tuples), generates alert message
-def gen_hpl_alert(offenders):
-	
-	msg = 'Alert: High packet loss on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
-
-	#sort by percentage. switch to tup[0] to sort by trunk name
-	offenders.sort(key=lambda tup: tup[3])
-
-	#for row in offenders:
-	#	msg += "\ntrunk name: " + str(row[0]) + "\npercentage: " + "%.2f%%\n" % row[3]
-
-	msg += '\n' + tabulate(offenders, headers=['Trunk','Completed Calls','Total HPL Calls','Percentage'])
-
-	return msg
-
 #takes message and recipients and sends via gmail SMTP
-def send_email(msg, recipients):
+def send_email(subject, msg, recipients):
 
-	subject = 'Traffic Summarizer Alerts: ' + str(datetime.now())
+	subject += str(datetime.now().replace(minute=0,second=0,microsecond=0))
 
 	# this is the email I created for the alerts
 	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
@@ -106,6 +91,24 @@ def send_email(msg, recipients):
 		    print ('error sending mail')
 
 	server.quit()
+
+#given list of offenders (list of (trunk, percentage) tuples), generates alert message
+def gen_hpl_alert(offenders):
+	
+	msg = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
+
+	#sort by percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[3])
+
+	for row in offenders:
+		msg += "\ntrunk name: " 		+ str(row[0]) \
+		 	+  "\n  completed calls: " 	+ str(row[1]) \
+		 	+  "\n  total HPL calls: " 		+ str(row[2]) \
+		 	+  "\n  percentage of completed calls with HPL: " + "%.2f%%\n" % row[3]
+
+	#msg += '\n' + tabulate(offenders, headers=['Trunk','Completed Calls','Total HPL Calls','Percentage'])
+
+	return msg
 
 #takes a cx_Oracle cursor object and prints list of trunks with HPL above threshold.
 def alert_pktloss(cursor):
@@ -141,7 +144,7 @@ def alert_pktloss(cursor):
 	#print alert to terminal, then send email to recipients
 	alert = gen_hpl_alert(offenders)
 	print(alert)
-	send_email(alert, recipients)
+	send_email('High Packet Loss Alert: ', alert, recipients)
 
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_rteadv(cursor):
@@ -187,11 +190,11 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 curs 	= db.cursor()
 
 #fetch rows to be examined then perform the High Packet Loss check
-#curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
-#alert_pktloss(curs)
+curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
+alert_pktloss(curs)
 
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra ORDER BY tdra_avg DESC')
-alert_rteadv(curs)
+#alert_rteadv(curs)
 
 db.close()

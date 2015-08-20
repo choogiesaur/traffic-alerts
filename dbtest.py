@@ -1,20 +1,22 @@
+#delete this import if using python 3
 from __future__ import division
+
 from datetime import datetime, timedelta
 from tabulate import tabulate
 import cx_Oracle
 import smtplib
 
 """
-NOTE: This was primarily made with Python 3 in mind. It works on vetools01 with python 2 and 
-the __future__ import, but if any compatibility issues arise, just install the above packages
-and run on python 3.
+NOTE: This was primarily developed under Python 3. It works on vetools01 with Python 2 and 
+the __future__ import, but if any compatibility issues arise, just install the above packages,
+delete the first line, and run on python 3.
 """
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net
 #ossdb.db.idt.net 			<- service_name
 
-#takes a datetime.datetime object, translates to GMT, sets back 2 hours, and floors to nearest hour
+#takes a datetime.datetime object in EST, translates to GMT, sets back 2 hours, and floors to nearest hour.
 def get_timeframe(date):
 	#convert to gmt. keep as multiple lines to allow time zone flexibility
 	gmt 	= date 	+ timedelta(hours=4)
@@ -25,7 +27,7 @@ def get_timeframe(date):
 def send_email(subject, msg, recipients):
 
 	#remember to change the time to the actual time the report is running for
-	subject += str(datetime.now().replace(minute=0,second=0,microsecond=0))
+	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
 
 	# this is the email I created for the alerts
 	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
@@ -65,8 +67,8 @@ def gen_hpl_alert(offenders):
 	for row in offenders:
 		msg += "\ntrunk name: " 		+ str(row[0]) \
 		 	+  "\n  completed calls: " 	+ str(row[1]) \
-		 	+  "\n  total HPL calls: " 		+ str(row[2]) \
-		 	+  "\n  percentage of completed calls with HPL: " + "%.2f%%\n" % row[3]
+		 	+  "\n  total high packet loss calls: " 		+ str(row[2]) \
+		 	+  "\n  percentage of completed calls with high packet loss: " + "%.2f%%\n" % row[3]
 
 	#msg += '\n' + tabulate(offenders, headers=['Trunk','Completed Calls','Total HPL Calls','Percentage'])
 
@@ -75,8 +77,8 @@ def gen_hpl_alert(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with HPL above threshold.
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net', 'richard.lee@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net', 'richard.lee@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -117,8 +119,8 @@ def gen_rteadv_alert(offenders):
 	
 	msg = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
 
-	#sort by percentage. switch to tup[0] to sort by trunk name
-	offenders.sort(key=lambda tup: tup[3])
+	#sort by time to generate route advanceable response
+	offenders.sort(key=lambda tup: tup[4])
 
 	for row in offenders:
 		msg += "\ntrunk name: " 		+ str(row[0]) \
@@ -132,7 +134,8 @@ def gen_rteadv_alert(offenders):
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_rteadv(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net', 'richard.lee@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []

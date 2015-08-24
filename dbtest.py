@@ -83,13 +83,11 @@ def gen_hpl_alert(offenders):
 
 	for row in offenders:
 		url = gen_url(get_timeframe(datetime.now()), row[0], row[4])
-		msg += "\n" + url
-		msg += "\ntrunk name: " 		+ str(row[0]) \
+		msg += "\n" + url \
+			+  "\ntrunk name: " 		+ str(row[0]) \
 		 	+  "\n  completed calls: " 	+ str(row[1]) \
 		 	+  "\n  total high packet loss calls: " 		+ str(row[2]) \
 		 	+  "\n  percentage of completed calls with high packet loss: " + "%.2f%%\n" % row[3]
-
-	#msg += '\n' + tabulate(offenders, headers=['Trunk','Completed Calls','Total HPL Calls','Percentage'])
 
 	return msg
 
@@ -97,7 +95,7 @@ def gen_hpl_alert(offenders):
 def alert_pktloss(cursor):
 	
 	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net', 'richard.lee@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []

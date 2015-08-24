@@ -28,6 +28,9 @@ emailtest_465.py
 emailtest_587.py
 emailtest.py
 cx_Oracle.so
+tab.py
+test.txt
+gmailhtml.py
 
 #directories
 cx_Oracle-5.1.3-py2.6.egg-info

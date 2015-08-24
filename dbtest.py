@@ -36,6 +36,8 @@ def gen_url(time, trunk, direction):
 
 	url 	= "http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
 			% (year, month, day, s_hour, year, month, day, e_hour)
+
+	#append 'otg=' when carrier is inbound, 'dtg=' when carrier is outbound
 	url 	+= ("&otg=" + trunk) if direction == 'I' else ("&dtg=" + trunk)
 
 	return url 
@@ -141,7 +143,9 @@ def gen_rteadv_alert(offenders):
 	offenders.sort(key=lambda tup: tup[4])
 
 	for row in offenders:
-		msg += "\ntrunk name: " 		+ str(row[0]) \
+		url = gen_url(get_timeframe(datetime.now()), row[0], 'O')
+		msg += "\n" + url \
+			+  "\ntrunk name: " 		+ str(row[0]) \
 		 	+  "\n  attempts: " 		+ str(row[1]) \
 		 	+  "\n  number of route-advanceable calls: " + str(row[2]) \
 		 	+  "\n  percentage of attempts that were route-advanceable: " + "%.2f%%" % row[3] \
@@ -165,12 +169,8 @@ def alert_rteadv(cursor):
 
 		date 				= row[0] #save as datetime obj, not string
 		trunk 				= row[1]
-		direction 			= str(row[2])
 		attempts 			= row[3]
-		answered			= row[4]
-		#failed				= row[5]
 		tdra_count			= row[8]
-		#tdra_total			= row[9]
 		tdra_avg			= row[10]
 
 		#only look at records from desired hour (2 hours before)
@@ -204,17 +204,15 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-#"""
+"""
 #fetch rows to be examined then perform the High Packet Loss check
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
-#"""
-
 """
+
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 alert_rteadv(curs)
-"""
 
 #make sure to generate url for GMT. or clicking on it will give the report for 2 hours earlier (EST)
 #print(gen_url(get_timeframe(datetime.now()), 'NPPINATCOMHT_Y'))

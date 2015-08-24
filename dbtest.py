@@ -34,8 +34,9 @@ def gen_url(time, trunk, direction):
 	s_hour 	= '0' + str(time.hour)		if time.hour  	< 10  else str(time.hour)
 	e_hour	= '0' + str(time.hour+1)	if time.hour+1  < 10  else str(time.hour)
 
-	url 	= "http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s&otg=%s" \
-			% (year, month, day, s_hour, year, month, day, e_hour, trunk)
+	url 	= "http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
+			% (year, month, day, s_hour, year, month, day, e_hour)
+	url 	+= ("&otg=" + trunk) if direction == 'I' else ("&dtg=" + trunk)
 
 	return url 
 
@@ -82,8 +83,8 @@ def gen_hpl_alert(offenders):
 
 	for row in offenders:
 		url = gen_url(get_timeframe(datetime.now()), row[0], row[4])
-		msg += "\ntraffic summarizer URL: " + url
-		msg += "\n  trunk name: " 		+ str(row[0]) \
+		msg += "\n" + url
+		msg += "\ntrunk name: " 		+ str(row[0]) \
 		 	+  "\n  completed calls: " 	+ str(row[1]) \
 		 	+  "\n  total high packet loss calls: " 		+ str(row[2]) \
 		 	+  "\n  percentage of completed calls with high packet loss: " + "%.2f%%\n" % row[3]

@@ -1,0 +1,14 @@
+url gen notes
+
+example: http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=2015-08-20_10&edt=2015-08-20_11&otg=LEVEL3LAC
+
+make sure to feed it GMT time, so use get_timeframe(). otherwise interprets EST time as GMT and you view the wrong results.
+
+tried this trunk: NPPOTELEGITX_Y
+
+direction was outbound. therefore in the url, do 'dtg=NPPOTELEGITX_Y'
+
+if direction == 'O'
+	use dtg=
+elif direction == 'I'
+	use otg=

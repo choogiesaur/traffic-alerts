@@ -1,7 +1,7 @@
 # traffic-alerts
 Tool for periodically scanning network traffic and generating alerts based on certain conditions.
 
-Dependencies: **Python3**, **cx_Oracle**
+Dependencies: **Python3**, **cx_Oracle**, **HTML.py**
 
 Currently implemented alerts:
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert. Number of completed calls > 1000.

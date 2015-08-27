@@ -48,6 +48,7 @@ def send_html_email(subject, html, recipients):
 	#remember to change the time to the actual time the report is running for
 	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
 
+	#email I created for the alerts. feel free to change, although only tested with gmail
 	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
 	gmail_passwd = 'idtengineering123!'
 

@@ -121,9 +121,9 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -203,9 +203,9 @@ def gen_rteadv_html(offenders):
 #takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
 def alert_rteadv(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []

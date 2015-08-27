@@ -64,7 +64,7 @@ def print_hpl_rows(cursor):
 		else:
 			break
 
-#takes message and recipients and sends via gmail SMTP
+#takes a message and recipients and sends via gmail SMTP
 def send_email(subject, msg, recipients):
 
 	#remember to change the time to the actual time the report is running for

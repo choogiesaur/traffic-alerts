@@ -43,36 +43,7 @@ def gen_url(time, trunk, direction):
 
 	return url 
 
-#takes message and recipients and sends via gmail SMTP
-def send_email(subject, msg, recipients):
-
-	#remember to change the time to the actual time the report is running for
-	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
-
-	# this is the email I created for the alerts
-	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
-	gmail_passwd = 'idtengineering123!'
-
-	server = smtplib.SMTP_SSL('smtp.gmail.com:465')
-	server.ehlo()
-	server.login(gmail_sender, gmail_passwd)
-
-	for recipient in recipients:
-
-		body = '\r\n'.join(['To: %s' % recipient,
-		                    'From: %s' % gmail_sender,
-		                    'Subject: %s' % subject,
-		                    '', msg])
-
-		try:
-		    server.sendmail(gmail_sender, [recipient], body)
-		    print ('email sent to: ' + recipient)
-		except:
-		    print ('error sending mail')
-
-	server.quit()
-
-def send_html(subject, html, recipients):
+def send_html_email(subject, html, recipients):
 
 	#remember to change the time to the actual time the report is running for
 	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
@@ -182,7 +153,7 @@ def alert_pktloss(cursor):
 	#print alert to terminal, then send email to recipients
 	print(gen_hpl_alert(offenders))
 	alert = gen_hpl_html(offenders)
-	send_html('Alert: High Packet Loss ', alert, recipients)
+	send_html_email('Alert: High Packet Loss ', alert, recipients)
 
 """--------------------------------"""
 """Code for Route-advanceable alert"""
@@ -260,7 +231,7 @@ def alert_rteadv(cursor):
 	#print alert to terminal, then send email to recipients
 	print(gen_rteadv_alert(offenders))
 	alert = gen_rteadv_html(offenders)
-	send_html('Alert: Route Advanceable SIP Response ', alert, recipients)
+	send_html_email('Alert: Route Advanceable SIP Response ', alert, recipients)
 
 """------------"""
 """MAIN PROGRAM"""

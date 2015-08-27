@@ -63,3 +63,32 @@ def print_hpl_rows(cursor):
 			count += 1
 		else:
 			break
+
+#takes message and recipients and sends via gmail SMTP
+def send_email(subject, msg, recipients):
+
+	#remember to change the time to the actual time the report is running for
+	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
+
+	# this is the email I created for the alerts
+	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
+	gmail_passwd = 'idtengineering123!'
+
+	server = smtplib.SMTP_SSL('smtp.gmail.com:465')
+	server.ehlo()
+	server.login(gmail_sender, gmail_passwd)
+
+	for recipient in recipients:
+
+		body = '\r\n'.join(['To: %s' % recipient,
+		                    'From: %s' % gmail_sender,
+		                    'Subject: %s' % subject,
+		                    '', msg])
+
+		try:
+		    server.sendmail(gmail_sender, [recipient], body)
+		    print ('email sent to: ' + recipient)
+		except:
+		    print ('error sending mail')
+
+	server.quit()

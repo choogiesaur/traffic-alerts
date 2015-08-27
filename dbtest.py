@@ -13,6 +13,7 @@ NOTE: This was primarily developed under Python 3. It works on vetools01 with Py
 the __future__ import, but if any compatibility issues arise, just install the above packages,
 delete the first line, and run on python 3.
 """
+#test
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net

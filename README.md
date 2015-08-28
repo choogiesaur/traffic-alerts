@@ -25,3 +25,4 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 - Some of the formatting looks clean in a text editor but a bit iffy on GitHub.
 - Meant for python 3, but is able to run on vetools' python 2.6 with \__future\__ import
 - When implementing new alerts, the function print_fields() in deprecated_fxns.py is useful for lining up database fields with the python program.
+- More notes in notes.txt :)

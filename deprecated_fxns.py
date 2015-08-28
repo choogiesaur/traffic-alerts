@@ -160,6 +160,7 @@ curs 	= db.cursor()
 
 #fetch rows to be examined then perform the High Packet Loss check
 #curs.execute('SELECT * FROM ossdb.v_tg_calldur ORDER BY tstamp')
-curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
+#curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
 #curs.execute('SELECT * FROM ossdb.v_tg_calldur')
+curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 print_fields(curs)

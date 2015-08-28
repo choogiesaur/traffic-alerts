@@ -18,7 +18,7 @@ delete the first line, and run on python 3.
 #ex02-scan.prod.idt.net
 #ossdb.db.idt.net 		<- service_name
 
-global_recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+global_recipients = ['traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
 					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 #takes a datetime.datetime object in EST, translates to GMT, sets back 2 hours, and floors to nearest hour.
@@ -34,7 +34,7 @@ def gen_url(time, trunk, direction):
 	#example: http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=2015-08-20_10&edt=2015-08-20_11&otg=LEVEL3LAC
 	year 	= str(time.year)
 	month	= '0' + str(time.month)		if time.month 	< 10  else str(time.month)
-	day		= '0' + str(time.day)		if time.day   	< 10  else str(time.day)
+	day 	= '0' + str(time.day)		if time.day   	< 10  else str(time.day)
 	s_hour 	= '0' + str(time.hour)		if time.hour  	< 10  else str(time.hour)
 	e_hour	= '0' + str(time.hour+1)	if time.hour+1  < 10  else str(time.hour)
 
@@ -109,8 +109,8 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = global_recipients
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = global_recipients
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -155,15 +155,16 @@ def gen_rteadv_html(offenders):
 	if len(offenders) == 0:
 		return "No offenders for this hour."
 	
-	headers = ['Trunk', 'Attempts', '# Route-advanceable Calls', 'Percentage of Attempts Route-advanceable', 'Average time to signal route-advanceable SIP response']
+	headers = ['Trunk', 'Attempts', 'ASR', '# Route-advanceable Calls', 'Percentage of Attempts Route-advanceable', 'Average time to signal route-advanceable SIP response']
 
 	#sort by time to generate route advanceable response
-	offenders.sort(key=lambda tup: tup[4], reverse=True)
+	offenders.sort(key=lambda tup: tup[5], reverse=True)
 
 	for row in offenders:
 		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , 'O'))
-		row[3] = "%.2f%%\n" % row[3]
-		row[4] = "%.2f\n" % row[4]
+		row[2] = "%.2f\n" % (row[2] / float(row[1])) #calculate ASR
+		row[4] = "%.2f%%\n" % row[4]
+		row[5] = "%.2f\n" % row[5]
 
 	txt = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
@@ -184,11 +185,12 @@ def alert_rteadv(cursor):
 
 	for row in cursor:
 
-		date 				= row[0] #save as datetime obj, not string
-		trunk 				= row[1]
-		attempts 			= row[3]
-		tdra_count			= row[8]
-		tdra_avg			= row[10]
+		date 			= row[0] #save as datetime obj, not string
+		trunk 			= row[1]
+		attempts 		= row[3]
+		answered		= row[4]
+		tdra_count		= row[8]
+		tdra_avg		= row[10]
 
 		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
@@ -196,7 +198,7 @@ def alert_rteadv(cursor):
 			#minimum 100 route advanceable calls and >= 20% of all attempts are route advanceable,
 			#if avg time to signal route advanceable sip response is >= 6 seconds, generate alert
 			if (tdra_count / attempts) >= 0.20 and tdra_avg >= 6:
-				offenders.append([trunk, attempts, tdra_count, (tdra_count / attempts) * 100 ,tdra_avg])
+				offenders.append([trunk, attempts, answered, tdra_count, (tdra_count / attempts) * 100 ,tdra_avg,])
 
 	#print alert to terminal, then send email to recipients
 	print('\ngenerating route advanceable alert...')
@@ -232,7 +234,7 @@ def gen_calldur_html(offenders):
 #takes a cx_Oracle cursor object and prints trunks with high volume of short-duration calls (< 30 sec, < 1min)
 def alert_calldur(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'engineering@idt.net']
+	recipients = ['traffic.summarizer.alerts@gmail.com', 'engineering@idt.net']
 	offenders  = []
 	timeframe = get_timeframe(datetime.now())
 
@@ -264,8 +266,6 @@ def alert_calldur(cursor):
 	alert = gen_calldur_html(offenders)
 	send_html_email('Alert: Short Call Duration ', alert, recipients)
 
-
-
 """------------"""
 """MAIN PROGRAM"""
 """------------"""
@@ -290,13 +290,13 @@ curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
 #"""
 
-"""
+#"""
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 alert_rteadv(curs)
 #"""
 
-"""
+#"""
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_calldur')
 alert_calldur(curs)

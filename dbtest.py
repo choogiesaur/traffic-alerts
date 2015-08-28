@@ -98,6 +98,7 @@ def gen_hpl_html(offenders):
 	for row in offenders:
 		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , row[4]))
 		row[3] = "%.2f%%\n" % row[3]
+
 	
 	txt = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
@@ -122,6 +123,7 @@ def alert_pktloss(cursor):
 		trunk 				= row[1]
 		direction 			= str(row[2])
 		completed 			= row[4]
+		call_seconds		= row[6]
 		otg_hlpkt_calls 	= row[8]
 		dtg_hlpkt_calls 	= row[9]
 		
@@ -133,6 +135,7 @@ def alert_pktloss(cursor):
 			
 			#if 15% or more of calls have HPL, add to offenders list
 			if (total_hlpkt_calls / completed) >= 0.15:
+				aloc = (call_seconds / float(60) ) / float(answered)
 				offenders.append([trunk, completed, total_hlpkt_calls, (total_hlpkt_calls/completed) * 100 , direction])
 				#				row[0]		row[1]	row[2]				row[3]								row[4]
 
@@ -225,10 +228,10 @@ def gen_calldur_html(offenders):
 
 	return msg
 
-#takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
+#takes a cx_Oracle cursor object and prints trunks with high volume of short-duration calls (< 30 sec, < 1min)
 def alert_calldur(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'engineering@idt.net']
 	offenders  = []
 	timeframe = get_timeframe(datetime.now())
 
@@ -245,7 +248,7 @@ def alert_calldur(cursor):
 		dur_1m 		= row[9]
 
 		#only look at records from desired hour (2 hours before)
-		if date == timeframe:
+		if date == timeframe and answered >= 1000:
 
 			#add intervals to get total calls less than 30 seconds, less than 1 minute
 			under_30s 	= dur_10s + dur_30s
@@ -280,13 +283,13 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-#"""
+"""
 #fetch rows to be examined then perform the High Packet Loss check
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
 #"""
 
-#"""
+"""
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 alert_rteadv(curs)

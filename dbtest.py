@@ -13,7 +13,6 @@ NOTE: This was primarily developed under Python 3. It works on vetools01 with Py
 the __future__ import, but if any compatibility issues arise, just install the above packages,
 delete the first line, and run on python 3.
 """
-#test
 
 #ex01-scan.prod-idt.net 	<- host
 #ex02-scan.prod.idt.net
@@ -26,7 +25,7 @@ def get_timeframe(date):
 	gmt_m2 	= gmt 	+ timedelta(hours=-2)
 	return gmt_m2.replace(minute=0,second=0,microsecond=0)
 
-#given time, trunk generates the url for the trunk usage w/ dest page on traffic summarizer website
+#given time, trunk, and inbound/outbound generates the url for the trunk usage w/ dest page on traffic summarizer website
 def gen_url(time, trunk, direction):
 
 	#example: http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=2015-08-20_10&edt=2015-08-20_11&otg=LEVEL3LAC
@@ -44,9 +43,9 @@ def gen_url(time, trunk, direction):
 
 	return url 
 
+#uses google SMTP to send html alert message
 def send_html_email(subject, html, recipients):
 
-	#remember to change the time to the actual time the report is running for
 	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
 
 	#email I created for the alerts. feel free to change, although only tested with gmail
@@ -71,9 +70,9 @@ def send_html_email(subject, html, recipients):
 
 		try:
 		    server.sendmail(gmail_sender, [recipient], msg.as_string())
-		    print ('email sent to: ' + recipient)
+		    print ('  email sent to: ' + recipient)
 		except:
-		    print ('error sending mail')
+		    print ('  error sending mail to: ' + recipient)
 
 	server.quit()
 
@@ -81,40 +80,23 @@ def send_html_email(subject, html, recipients):
 """Code for High Packet Loss alert"""
 """-------------------------------"""
 
-#given list of offenders (list of (trunk, percentage) tuples), generates PLAINTEXT ALERT MESSAGE
-def gen_hpl_alert(offenders):
-	
-	msg = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
-
-	#sort by percentage. switch to tup[0] to sort by trunk name
-	offenders.sort(key=lambda tup: tup[3])
-
-	for row in offenders:
-		url = gen_url(get_timeframe(datetime.now()), row[0], row[4])
-		msg += "\n" + url \
-			+  "\ntrunk name: " 		+ str(row[0]) \
-		 	+  "\n  completed calls: " 	+ str(row[1]) \
-		 	+  "\n  total high packet loss calls: " 		+ str(row[2]) \
-		 	+  "\n  percentage of completed calls with high packet loss: " + "%.2f%%\n" % row[3]
-
-	return msg
-
 #given list of offenders (list of (trunk, percentage) tuples), generates alert as HTML TABLE
 def gen_hpl_html(offenders):
 	
 	if len(offenders) == 0:
 		return "No offenders for this hour."
 
-	txt = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n\n\n'
 	headers = ['Trunk', 'Completed Calls', 'High Packet Loss Calls', 'Percentage of calls with high packet loss', 'Direction']
 
 	#sort by percentage. switch to tup[0] to sort by trunk name
 	offenders.sort(key=lambda tup: tup[3])
 
+	#replace trunk name with clickable URL, format percentage
 	for row in offenders:
 		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , row[4]))
 		row[3] = "%.2f%%\n" % row[3]
 	
+	txt = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
 	
 	return msg
@@ -122,9 +104,9 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -153,7 +135,7 @@ def alert_pktloss(cursor):
 				#				row[0]		row[1]	row[2]				row[3]								row[4]
 
 	#print alert to terminal, then send email to recipients
-	print(gen_hpl_alert(offenders))
+	print('\ngenerating high packet loss alert...')
 	alert = gen_hpl_html(offenders)
 	send_html_email('Alert: High Packet Loss ', alert, recipients)
 
@@ -161,32 +143,12 @@ def alert_pktloss(cursor):
 """Code for Route-advanceable alert"""
 """--------------------------------"""
 
-#given list of offenders (list of (trunk, percentage) tuples), generates alert message
-def gen_rteadv_alert(offenders):
-	
-	msg = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
-
-	#sort by time to generate route advanceable response
-	offenders.sort(key=lambda tup: tup[4])
-
-	for row in offenders:
-		url = gen_url(get_timeframe(datetime.now()), row[0], 'O')
-		msg += "\n" + url \
-			+  "\ntrunk name: " 		+ str(row[0]) \
-		 	+  "\n  attempts: " 		+ str(row[1]) \
-		 	+  "\n  number of route-advanceable calls: " + str(row[2]) \
-		 	+  "\n  percentage of attempts that were route-advanceable: " + "%.2f%%" % row[3] \
-		 	+  "\n  avg time to signal route-advanceable SIP response: "  + "%.2f seconds\n" % row[4]
-
-	return msg
-
-#given list of offenders (list of (trunk, percentage) tuples), generates alert message
+#given list of offenders, generates alert HTML for email
 def gen_rteadv_html(offenders):
 
 	if len(offenders) == 0:
 		return "No offenders for this hour."
 	
-	txt = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
 	headers = ['Trunk', 'Attempts', '# Route-advanceable Calls', 'Percentage of Attempts Route-advanceable', 'Average time to signal route-advanceable SIP response']
 
 	#sort by time to generate route advanceable response
@@ -197,16 +159,17 @@ def gen_rteadv_html(offenders):
 		row[3] = "%.2f%%\n" % row[3]
 		row[4] = "%.2f\n" % row[4]
 
+	txt = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
 
 	return msg
 
-#takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
+#takes a cx_Oracle cursor object and prints list of trunks with high delay in signalling route-advanceable SIP response
 def alert_rteadv(cursor):
 	
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -231,9 +194,72 @@ def alert_rteadv(cursor):
 				offenders.append([trunk, attempts, tdra_count, (tdra_count / attempts) * 100 ,tdra_avg])
 
 	#print alert to terminal, then send email to recipients
-	print(gen_rteadv_alert(offenders))
+	print('\ngenerating route advanceable alert...')
 	alert = gen_rteadv_html(offenders)
 	send_html_email('Alert: Route Advanceable SIP Response ', alert, recipients)
+
+"""----------------------------"""
+"""Code for Call Duration alert"""
+"""----------------------------"""
+
+def gen_calldur_html(offenders):
+
+	if len(offenders) == 0:
+		return "No offenders for this hour."
+	
+	headers = ['Trunk', 'Attempts', 'Completed Calls', 'ALOC', 'Calls under 30 sec', 'Calls under 1 min', 'Percentage Under 30s', 'Percentage Under 1m']
+
+	for row in offenders:
+		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , row[6]))
+		del row[6]
+		row[3] = "%.2f\n" % row[3]
+		row.append("%.2f%%\n" % ((row[4] / float(row[2])) * 100))
+		row.append("%.2f%%\n" % ((row[5] / float(row[2])) * 100))
+
+	#sort by percentage of completed calls under 30 seconds
+	offenders.sort(key=lambda tup: tup[6], reverse=True)
+
+	txt = 'Alert: High volume of calls with short duration from the following ' + str(len(offenders)) + ' trunks:\n'
+	msg = txt + HTML.table([headers] + offenders)
+
+	return msg
+
+#takes a cx_Oracle cursor object and prints list of tg_id's with HPL above threshold. Also takes current 
+def alert_calldur(cursor):
+	
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	offenders  = []
+	timeframe = get_timeframe(datetime.now())
+
+	for row in cursor:
+
+		date 		= row[0]
+		trunk 		= row[1]
+		direction 	= row[2]
+		attempts 	= row[3]
+		answered 	= row[4]
+		call_seconds= row[5]
+		dur_10s 	= row[7]
+		dur_30s 	= row[8]
+		dur_1m 		= row[9]
+
+		#only look at records from desired hour (2 hours before)
+		if date == timeframe:
+
+			#add intervals to get total calls less than 30 seconds, less than 1 minute
+			under_30s 	= dur_10s + dur_30s
+			under_1m 	= dur_10s + dur_30s + dur_1m
+
+			aloc = (call_seconds / float(60) ) / float(answered)
+
+			if (under_30s / float(answered)) > 0.80 or (under_1m / float(answered)) > 0.95:
+				offenders.append([trunk, attempts, answered, aloc, under_30s, under_1m, direction])
+
+	print('\ngenerating call duration alert...')
+	alert = gen_calldur_html(offenders)
+	send_html_email('Alert: Short Call Duration ', alert, recipients)
+
+
 
 """------------"""
 """MAIN PROGRAM"""
@@ -263,6 +289,12 @@ alert_pktloss(curs)
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
 alert_rteadv(curs)
+#"""
+
+#"""
+#fetch rows to be examined then perform the route advanceable check
+curs.execute('SELECT * FROM ossdb.v_tg_calldur')
+alert_calldur(curs)
 #"""
 
 #make sure to generate url for GMT. or clicking on it will give the report for 2 hours earlier (EST)

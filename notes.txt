@@ -3,6 +3,7 @@
 @-------------------@
 
 Datetime stuff:
+---------------
 
 if time is 12:15 	-> alert system should look at hour 10 - 11
 if time is 1:15 	-> alert system should look at hour 11 - 12
@@ -13,6 +14,7 @@ returned rows, however, show 3 previous hours in GMT
 and gmt is EST + 4, so right now @ 15:05 EST it is 19:05 GMT
 
 URL generation stuff:
+---------------------
 
 example: http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=2015-08-20_10&edt=2015-08-20_11&otg=LEVEL3LAC
 

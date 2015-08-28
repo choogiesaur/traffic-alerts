@@ -1,5 +1,11 @@
+#delete this import if problems arise using python 3
+from __future__ import division
+
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import HTML
 import cx_Oracle
-from datetime import date, datetime, timedelta
 import smtplib
 
 #takes a cx_Oracle cursor object and returns current SYSDATE of associated db
@@ -12,8 +18,10 @@ def get_sysdate(cursor):
 def print_fields(cursor):
 	desc = cursor.description
 	print('--- FIELDS: ---')
+	count = 0
 	for row in desc:
-		print(row[0])
+		print(str(count) + " " + row[0])
+		count += 1
 	print()
 
 """can deprecate, just print result of gen_hpl_alert"""
@@ -92,3 +100,64 @@ def send_email(subject, msg, recipients):
 		    print ('error sending mail')
 
 	server.quit()
+
+#given list of offenders (list of (trunk, percentage) tuples), generates PLAINTEXT ALERT MESSAGE
+def gen_hpl_alert(offenders):
+	
+	msg = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
+
+	#sort by percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[3])
+
+	for row in offenders:
+		url = gen_url(get_timeframe(datetime.now()), row[0], row[4])
+		msg += "\n" + url \
+			+  "\ntrunk name: " 		+ str(row[0]) \
+		 	+  "\n  completed calls: " 	+ str(row[1]) \
+		 	+  "\n  total high packet loss calls: " 		+ str(row[2]) \
+		 	+  "\n  percentage of completed calls with high packet loss: " + "%.2f%%\n" % row[3]
+
+	return msg
+
+#given list of offenders, generates alert message (deprecate?)
+def gen_rteadv_alert(offenders):
+	
+	msg = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
+
+	#sort by time to generate route advanceable response
+	offenders.sort(key=lambda tup: tup[4])
+
+	for row in offenders:
+		url = gen_url(get_timeframe(datetime.now()), row[0], 'O')
+		msg += "\n" + url \
+			+  "\ntrunk name: " 		+ str(row[0]) \
+		 	+  "\n  attempts: " 		+ str(row[1]) \
+		 	+  "\n  number of route-advanceable calls: " + str(row[2]) \
+		 	+  "\n  percentage of attempts that were route-advanceable: " + "%.2f%%" % row[3] \
+		 	+  "\n  avg time to signal route-advanceable SIP response: "  + "%.2f seconds\n" % row[4]
+
+	return msg
+
+"""------------"""
+"""MAIN PROGRAM"""
+"""------------"""
+
+print("Current system time: " + str(datetime.now()))
+
+#info for our db
+host 	= 'ex01-scan.prod.idt.net'
+port 	= 1521
+service = 'ossdb.db.idt.net'
+
+#connecting to cdrcsa database via service name
+dsn_tns = cx_Oracle.makedsn(host, port, service_name=service)
+db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
+
+#create a cursor object; basically an iterator for select queries.
+curs 	= db.cursor()
+
+#fetch rows to be examined then perform the High Packet Loss check
+#curs.execute('SELECT * FROM ossdb.v_tg_calldur ORDER BY tstamp')
+curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
+curs.execute('SELECT * FROM ossdb.v_tg_calldur')
+print_fields(curs)

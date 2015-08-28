@@ -9,7 +9,9 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 - calls html generation function to create the alert message and html table
 - sends email to list of recipients via google SMTP.
 
-**TODO:** Switch to local SMTP/incorporate mailx
+**TODO:** 
+- Switch to local SMTP/incorporate mailx
+- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but much greater ease of use.
 
 **Currently implemented alerts:**
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert. Number of completed calls > 1000.
@@ -22,3 +24,4 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 **Notes:**
 - Some of the formatting looks clean in a text editor but a bit iffy on GitHub.
 - Meant for python 3, but is able to run on vetools' python 2.6 with \__future\__ import
+- When implementing new alerts, the function print_fields() in deprecated_fxns.py is useful for lining up database fields with the python program.

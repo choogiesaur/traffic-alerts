@@ -9,17 +9,15 @@ import cx_Oracle
 import smtplib
 
 """
-NOTE: This was primarily developed under Python 3. It works on vetools01 with Python 2 and 
+NOTE: This was primarily developed under Python 3. It works with Python 2 and 
 the __future__ import, but if any compatibility issues arise, just install the above packages,
 delete the first line, and run on python 3.
 """
 
-#ex01-scan.prod-idt.net 	<- host
-#ex02-scan.prod.idt.net
-#ossdb.db.idt.net 		<- service_name
+#<HOSTNAME>	<- host
+#<SERVICENAME> 		<- service_name
 
-global_recipients = ['traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+global_recipients = ['XXXXXXXX@blah.com']
 
 #takes a datetime.datetime object in EST, translates to GMT, sets back 2 hours, and floors to nearest hour.
 def get_timeframe(date):
@@ -38,7 +36,7 @@ def gen_url(time, trunk, direction):
 	s_hour 	= '0' + str(time.hour)		if time.hour  	< 10  else str(time.hour)
 	e_hour	= '0' + str(time.hour+1)	if time.hour+1  < 10  else str(time.hour)
 
-	url 	= "http://reports.idttechnology.com/traffic/tgdsum.psp?sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
+	url 	= "<summarizer_URL>sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
 			% (year, month, day, s_hour, year, month, day, e_hour)
 
 	#append 'otg=' when carrier is inbound, 'dtg=' when carrier is outbound
@@ -52,8 +50,8 @@ def send_html_email(subject, html, recipients):
 	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
 
 	#email I created for the alerts. feel free to change, although only tested with gmail
-	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
-	gmail_passwd = 'idtengineering123!'
+	gmail_sender = 'gmail_acct'
+	gmail_passwd = 'password'
 
 	server = smtplib.SMTP_SSL('smtp.gmail.com:465')
 	server.ehlo()
@@ -109,7 +107,6 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
 	recipients = global_recipients
 
 	#list of trunks with HPL on 15% or more of calls
@@ -174,7 +171,6 @@ def gen_rteadv_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high delay in signalling route-advanceable SIP response
 def alert_rteadv(cursor):
 	
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
 	recipients = global_recipients
 
 	#list of trunks that take too long to signal route advanceable SIP response
@@ -234,7 +230,7 @@ def gen_calldur_html(offenders):
 #takes a cx_Oracle cursor object and prints trunks with high volume of short-duration calls (< 30 sec, < 1min)
 def alert_calldur(cursor):
 	
-	recipients = ['traffic.summarizer.alerts@gmail.com', 'engineering@idt.net']
+	recipients = global_recipients
 	offenders  = []
 	timeframe = get_timeframe(datetime.now())
 
@@ -245,7 +241,7 @@ def alert_calldur(cursor):
 		direction 	= row[2]
 		attempts 	= row[3]
 		answered 	= row[4]
-		call_seconds= row[5]
+		call_seconds	= row[5]
 		dur_10s 	= row[7]
 		dur_30s 	= row[8]
 		dur_1m 		= row[9]
@@ -273,36 +269,33 @@ def alert_calldur(cursor):
 print("Current system time: " + str(datetime.now()))
 
 #info for our db
-host 	= 'ex01-scan.prod.idt.net'
-port 	= 1521
-service = 'ossdb.db.idt.net'
+host 	= 'HOSTNAME'
+port 	= 'PORT'
+service = 'SERVICENAME'
 
 #connecting to cdrcsa database via service name
 dsn_tns = cx_Oracle.makedsn(host, port, service_name=service)
-db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
+db 		= cx_Oracle.connect('a','b','c')
 
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
 #"""
 #fetch rows to be examined then perform the High Packet Loss check
-curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
+curs.execute('HPL sql query')
 alert_pktloss(curs)
 #"""
 
 #"""
 #fetch rows to be examined then perform the route advanceable check
-curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdra_avg desc')
+curs.execute('RTEADV sql query')
 alert_rteadv(curs)
 #"""
 
 #"""
 #fetch rows to be examined then perform the route advanceable check
-curs.execute('SELECT * FROM ossdb.v_tg_calldur')
+curs.execute('CALLDUR sql query')
 alert_calldur(curs)
 #"""
-
-#make sure to generate url for GMT. or clicking on it will give the report for 2 hours earlier (EST)
-#print(gen_url(get_timeframe(datetime.now()), 'NPPINATCOMHT_Y'))
 
 db.close()

@@ -18,6 +18,9 @@ delete the first line, and run on python 3.
 #ex02-scan.prod.idt.net
 #ossdb.db.idt.net 		<- service_name
 
+global_recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
+					'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+
 #takes a datetime.datetime object in EST, translates to GMT, sets back 2 hours, and floors to nearest hour.
 def get_timeframe(date):
 	#convert to gmt. keep as multiple lines to allow time zone flexibility
@@ -88,8 +91,8 @@ def gen_hpl_html(offenders):
 
 	headers = ['Trunk', 'Completed Calls', 'High Packet Loss Calls', 'Percentage of calls with high packet loss', 'Direction']
 
-	#sort by percentage. switch to tup[0] to sort by trunk name
-	offenders.sort(key=lambda tup: tup[3])
+	#sort by descending percentage. switch to tup[0] to sort by trunk name
+	offenders.sort(key=lambda tup: tup[3], reverse=True)
 
 	#replace trunk name with clickable URL, format percentage
 	for row in offenders:
@@ -104,9 +107,8 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = global_recipients
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -120,8 +122,8 @@ def alert_pktloss(cursor):
 		trunk 				= row[1]
 		direction 			= str(row[2])
 		completed 			= row[4]
-		otg_hlpkt_calls 	= row[6]
-		dtg_hlpkt_calls 	= row[7]
+		otg_hlpkt_calls 	= row[8]
+		dtg_hlpkt_calls 	= row[9]
 		
 		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
 		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
@@ -152,7 +154,7 @@ def gen_rteadv_html(offenders):
 	headers = ['Trunk', 'Attempts', '# Route-advanceable Calls', 'Percentage of Attempts Route-advanceable', 'Average time to signal route-advanceable SIP response']
 
 	#sort by time to generate route advanceable response
-	offenders.sort(key=lambda tup: tup[4])
+	offenders.sort(key=lambda tup: tup[4], reverse=True)
 
 	for row in offenders:
 		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , 'O'))
@@ -167,11 +169,10 @@ def gen_rteadv_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high delay in signalling route-advanceable SIP response
 def alert_rteadv(cursor):
 	
-	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com', 'carriersupportreports@idt.net', \
-	#				'romel.khan@idt.net', 'richard.lee@idt.net', 'joseph.kurtas@idt.net']
+	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	recipients = global_recipients
 
-	#list of trunks with HPL on 15% or more of calls
+	#list of trunks that take too long to signal route advanceable SIP response
 	offenders 	= []
 
 	#calculate time from which records will be fetched. OS time => GMT => 2 hours before => floored to last hour

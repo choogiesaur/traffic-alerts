@@ -9,12 +9,12 @@ import cx_Oracle
 import smtplib
 
 #takes a cx_Oracle cursor object and returns current SYSDATE of associated db
-#!!! can deprecate this and just use datetime.now()
+"""!!! can deprecate this and just use datetime.now()"""
 def get_sysdate(cursor):
 	cursor.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
 	return(cursor.fetchone()[0])
 
-#takes a cx_Oracle cursor object and prints the fields that are currently selected
+#takes a cx_Oracle cursor object and prints the fields that are currently selected STILL USEFUL!!
 def print_fields(cursor):
 	desc = cursor.description
 	print('--- FIELDS: ---')
@@ -24,8 +24,8 @@ def print_fields(cursor):
 		count += 1
 	print()
 
-"""can deprecate, just print result of gen_hpl_alert"""
 #given list of offenders (list of (trunk, percentage) tuples), prints list
+"""can deprecate, just print result of gen_hpl_alert"""
 def print_hpl_offenders(offenders):
 	print("There are "+str(len(offenders))+" offenders with high packet loss on 15% or more completed calls:")
 	print("---------------------------------------------------------------------------")
@@ -101,6 +101,8 @@ def send_email(subject, msg, recipients):
 
 	server.quit()
 
+"""The following two functions were the original plaintextalert generator, switched from these to HTML"""
+
 #given list of offenders (list of (trunk, percentage) tuples), generates PLAINTEXT ALERT MESSAGE
 def gen_hpl_alert(offenders):
 	
@@ -159,5 +161,5 @@ curs 	= db.cursor()
 #fetch rows to be examined then perform the High Packet Loss check
 #curs.execute('SELECT * FROM ossdb.v_tg_calldur ORDER BY tstamp')
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss')
-curs.execute('SELECT * FROM ossdb.v_tg_calldur')
+#curs.execute('SELECT * FROM ossdb.v_tg_calldur')
 print_fields(curs)

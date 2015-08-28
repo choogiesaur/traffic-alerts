@@ -1,5 +1,7 @@
 # traffic-alerts
-Tool for periodically scanning network traffic and generating alerts based on certain conditions.
+Tool for periodically scanning network traffic and generating alerts based on certain conditions. chrontab'd shell script on vetools that runs dbtest.py every hour. for each alert, this tool: 
+
+1) queries the specific database view
 
 Dependencies: **Python3**, **cx_Oracle**, **HTML.py**
 

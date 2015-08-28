@@ -1,10 +1,10 @@
 # traffic-alerts
 Tool for periodically scanning network traffic and generating alerts based on certain conditions. chrontab'd shell script on vetools that runs dbtest.py every hour. for each alert, this tool: 
 
-- 1) queries the specific database view for the given alert
-- 2) calls alert function to scan the result set for given conditions
-- 3) calls html generation function to create the alert message and html table
-- 4) sends email to list of recipients via google SMTP.
+- queries the specific database view for the given alert
+- calls alert function to scan the result set for given conditions
+- calls html generation function to create the alert message and html table
+- sends email to list of recipients via google SMTP.
 
 TODO: Switch to local SMTP/incorporate mailx
 

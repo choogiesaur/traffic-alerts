@@ -11,7 +11,7 @@ import smtplib
 #takes a cx_Oracle cursor object and returns current SYSDATE of associated db
 """!!! can deprecate this and just use datetime.now()"""
 def get_sysdate(cursor):
-	cursor.execute('SELECT SYSDATE FROM ossdb.v_tg_pkt_loss WHERE rownum <= 1')
+	cursor.execute('SELECT SYSDATE FROM table WHERE rownum <= 1')
 	return(cursor.fetchone()[0])
 
 #takes a cx_Oracle cursor object and prints the fields that are currently selected STILL USEFUL!!
@@ -79,8 +79,8 @@ def send_email(subject, msg, recipients):
 	subject += "on GMT hour " + str(get_timeframe(datetime.now()))
 
 	# this is the email I created for the alerts
-	gmail_sender = 'traffic.summarizer.alerts@gmail.com'
-	gmail_passwd = 'idtengineering123!'
+	gmail_sender = 'blah'
+	gmail_passwd = 'blah'
 
 	server = smtplib.SMTP_SSL('smtp.gmail.com:465')
 	server.ehlo()
@@ -147,9 +147,9 @@ def gen_rteadv_alert(offenders):
 print("Current system time: " + str(datetime.now()))
 
 #info for our db
-host 	= 'ex01-scan.prod.idt.net'
+host 	= 'hostname'
 port 	= 1521
-service = 'ossdb.db.idt.net'
+service = 'servicename'
 
 #connecting to cdrcsa database via service name
 dsn_tns = cx_Oracle.makedsn(host, port, service_name=service)

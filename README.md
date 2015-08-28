@@ -1,4 +1,7 @@
 # traffic-alerts
+
+Dependencies: **Python3**, **cx_Oracle**, **HTML.py**
+
 Tool for periodically scanning network traffic and generating alerts based on certain conditions. chrontab'd shell script on vetools that runs dbtest.py every hour. for each alert, this tool: 
 
 - queries the specific database view for the given alert
@@ -7,8 +10,6 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 - sends email to list of recipients via google SMTP.
 
 TODO: Switch to local SMTP/incorporate mailx
-
-Dependencies: **Python3**, **cx_Oracle**, **HTML.py**
 
 Currently implemented alerts:
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert. Number of completed calls > 1000.

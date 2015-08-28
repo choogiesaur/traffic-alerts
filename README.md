@@ -14,6 +14,7 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 **Currently implemented alerts:**
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert. Number of completed calls > 1000.
 - Alert for any outbound carriers who on average take greater than 6 seconds to signal a route advance-able sip response. Minimal route advanceable call must be greater than 100. Number of Route-advanceable calls must be greater than 20% of attempts.
+- If Duration is less than 30 sec for greater than 80% of completed calls, then alert. Or Duration is less than 60 sec for greater than 95% of completed calls, then alert. Minimum 1000 call answered.
 
 **Usage:**
 > python dbtest.py

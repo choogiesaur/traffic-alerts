@@ -89,7 +89,7 @@ def gen_hpl_html(offenders):
 	if len(offenders) == 0:
 		return "No offenders for this hour."
 
-	headers = ['Trunk', 'Completed Calls', 'High Packet Loss Calls', 'Percentage of calls with high packet loss', 'Direction']
+	headers = ['Trunk', 'Completed Calls', 'High Packet Loss Calls', 'Percentage of calls with high packet loss', 'Direction', 'ALOC']
 
 	#sort by descending percentage. switch to tup[0] to sort by trunk name
 	offenders.sort(key=lambda tup: tup[3], reverse=True)
@@ -98,6 +98,7 @@ def gen_hpl_html(offenders):
 	for row in offenders:
 		row[0] = HTML.link( row[0] , gen_url(get_timeframe(datetime.now()) , row[0] , row[4]))
 		row[3] = "%.2f%%\n" % row[3]
+		row[5] = "%.2f\n" % row[5]
 
 	
 	txt = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
@@ -108,8 +109,8 @@ def gen_hpl_html(offenders):
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
 def alert_pktloss(cursor):
 	
-	#recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
-	recipients = global_recipients
+	recipients = ['firas.sattar@idt.net', 'traffic.summarizer.alerts@gmail.com']
+	#recipients = global_recipients
 
 	#list of trunks with HPL on 15% or more of calls
 	offenders 	= []
@@ -134,9 +135,9 @@ def alert_pktloss(cursor):
 		if date == timeframe:
 			
 			#if 15% or more of calls have HPL, add to offenders list
-			if (total_hlpkt_calls / completed) >= 0.15:
-				aloc = (call_seconds / float(60) ) / float(answered)
-				offenders.append([trunk, completed, total_hlpkt_calls, (total_hlpkt_calls/completed) * 100 , direction])
+			if (total_hlpkt_calls / float(completed)) >= 0.15:
+				aloc = (call_seconds / float(60) ) / completed
+				offenders.append([trunk, completed, total_hlpkt_calls, (total_hlpkt_calls/completed) * 100 , direction, aloc])
 				#				row[0]		row[1]	row[2]				row[3]								row[4]
 
 	#print alert to terminal, then send email to recipients
@@ -283,7 +284,7 @@ db 		= cx_Oracle.connect('OSSREAD', 'oss2002read', dsn_tns)
 #create a cursor object; basically an iterator for select queries.
 curs 	= db.cursor()
 
-"""
+#"""
 #fetch rows to be examined then perform the High Packet Loss check
 curs.execute('SELECT * FROM ossdb.v_tg_pkt_loss ORDER BY tstamp')
 alert_pktloss(curs)
@@ -295,7 +296,7 @@ curs.execute('SELECT * FROM ossdb.v_tg_tdra WHERE direction = \'O\' ORDER BY tdr
 alert_rteadv(curs)
 #"""
 
-#"""
+"""
 #fetch rows to be examined then perform the route advanceable check
 curs.execute('SELECT * FROM ossdb.v_tg_calldur')
 alert_calldur(curs)

@@ -2,16 +2,16 @@
 
 **Dependencies:** ***Python3***, ***cx_Oracle***, ***HTML.py***
 
-Tool for periodically scanning network traffic and generating alerts based on certain conditions. chrontab'd shell script on vetools that runs dbtest.py every hour. for each alert, this tool: 
+Tool for periodically scanning network traffic and generating alerts based on certain conditions. crontab'd shell script on vetools server will run dbtest.py every hour. For each alert, this tool: 
 
-- queries the specific database view for the given alert
+- queries the specific database view for the given alert (packet loss, route advanceable response, call duration)
 - calls alert function to scan the result set for given conditions
 - calls html generation function to create the alert message and html table
 - sends email to list of recipients via google SMTP.
 
 **TODO:** 
 - Switch to local SMTP/incorporate mailx
-- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but much greater ease of use.
+- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but greater ease of use.
 
 **Currently implemented alerts:**
 - If high packet loss (>1%) on a certain hour is greater than 15% of all Completed Calls on that hour, then send email alert. Number of completed calls > 1000.

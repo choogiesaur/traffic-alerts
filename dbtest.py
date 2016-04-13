@@ -17,7 +17,7 @@ delete the first line, and run on python 3.
 #<HOSTNAME>	<- host
 #<SERVICENAME> 		<- service_name
 
-global_recipients = ['XXXXXXXX@blah.com']
+global_recipients = ['XXXXXXXX@blah.com', 'YYYYYYYY@blah.com']
 
 #takes a datetime.datetime object in EST, translates to GMT, sets back 2 hours, and floors to nearest hour.
 def get_timeframe(date):

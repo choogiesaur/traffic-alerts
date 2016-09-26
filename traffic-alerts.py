@@ -15,7 +15,7 @@ delete the first line, and run on python 3.
 """
 
 #<HOSTNAME>	<- host
-#<SERVICENAME> 		<- service_name
+#<SERVICENAME> 	<- service_name
 
 global_recipients = ['XXXXXXXX@blah.com', 'YYYYYYYY@blah.com']
 
@@ -35,13 +35,13 @@ def gen_url(time, trunk, direction):
 	day 	= '0' + str(time.day)		if time.day   	< 10  else str(time.day)
 	s_hour 	= '0' + str(time.hour)		if time.hour  	< 10  else str(time.hour)
 	e_hour	= '0' + str(time.hour+1)	if time.hour+1  < 10  else str(time.hour)
-
-	url 	= "<summarizer_URL>sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
+	
+	summarizer_url 	= "<blah.com>"
+	url 		= summarizer_url + "sdt=%s-%s-%s_%s&edt=%s-%s-%s_%s" \
 			% (year, month, day, s_hour, year, month, day, e_hour)
 
 	#append 'otg=' when carrier is inbound, 'dtg=' when carrier is outbound
 	url 	+= ("&otg=" + trunk) if direction == 'I' else ("&dtg=" + trunk)
-
 	return url 
 
 #uses google SMTP to send html alert message
@@ -59,10 +59,10 @@ def send_html_email(subject, html, recipients):
 
 	for recipient in recipients:
 
-		msg = MIMEMultipart('alternative')
-		msg['Subject'] = subject
-		msg['From'] = gmail_sender
-		msg['To'] = recipient
+		msg 		= MIMEMultipart('alternative')
+		msg['Subject'] 	= subject
+		msg['From'] 	= gmail_sender
+		msg['To'] 	= recipient
 
 		# Record the MIME types of both parts - text/plain and text/html.
 		#part1 = MIMEText(text, 'plain')
@@ -78,7 +78,7 @@ def send_html_email(subject, html, recipients):
 	server.quit()
 
 """-------------------------------"""
-"""Code for High Packet Loss alert"""
+"""----High Packet Loss alert-----"""
 """-------------------------------"""
 
 #given list of offenders (list of (trunk, percentage) tuples), generates alert as HTML TABLE
@@ -101,7 +101,6 @@ def gen_hpl_html(offenders):
 	
 	txt = 'Alert: High packet loss ( >= 1% ) on greater than 15% of calls from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
-	
 	return msg
 
 #takes a cx_Oracle cursor object and prints list of trunks with high packet loss above threshold.
@@ -117,16 +116,16 @@ def alert_pktloss(cursor):
 
 	for row in cursor:
 
-		date 				= row[0] #save as datetime obj, not string
-		trunk 				= row[1]
-		direction 			= str(row[2])
-		completed 			= row[4]
-		call_seconds		= row[6]
-		otg_hlpkt_calls 	= row[8]
-		dtg_hlpkt_calls 	= row[9]
+		date 		= row[0] #save as datetime obj, not string
+		trunk 		= row[1]
+		direction 	= str(row[2])
+		completed 	= row[4]
+		call_seconds	= row[6]
+		otg_hlpkt_calls = row[8]
+		dtg_hlpkt_calls = row[9]
 		
 		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
-		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
+		total_hlpkt_calls = otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
 
 		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
@@ -143,7 +142,7 @@ def alert_pktloss(cursor):
 	send_html_email('Alert: High Packet Loss ', alert, recipients)
 
 """--------------------------------"""
-"""Code for Route-advanceable alert"""
+"""Route-advanceable response alert"""
 """--------------------------------"""
 
 #given list of offenders, generates alert HTML for email
@@ -165,7 +164,6 @@ def gen_rteadv_html(offenders):
 
 	txt = 'Alert: High delay in signalling route-advanceable SIP response from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
-
 	return msg
 
 #takes a cx_Oracle cursor object and prints list of trunks with high delay in signalling route-advanceable SIP response
@@ -174,19 +172,19 @@ def alert_rteadv(cursor):
 	recipients = global_recipients
 
 	#list of trunks that take too long to signal route advanceable SIP response
-	offenders 	= []
+	offenders = []
 
 	#calculate time from which records will be fetched. OS time => GMT => 2 hours before => floored to last hour
 	timeframe = get_timeframe(datetime.now())
 
 	for row in cursor:
 
-		date 			= row[0] #save as datetime obj, not string
-		trunk 			= row[1]
-		attempts 		= row[3]
-		answered		= row[4]
-		tdra_count		= row[8]
-		tdra_avg		= row[10]
+		date 		= row[0] #save as datetime obj, not string
+		trunk 		= row[1]
+		attempts 	= row[3]
+		answered	= row[4]
+		tdra_count	= row[8]
+		tdra_avg	= row[10]
 
 		#only look at records from desired hour (2 hours before)
 		if date == timeframe:
@@ -224,7 +222,6 @@ def gen_calldur_html(offenders):
 
 	txt = 'Alert: High volume of calls with short duration from the following ' + str(len(offenders)) + ' trunks:\n'
 	msg = txt + HTML.table([headers] + offenders)
-
 	return msg
 
 #takes a cx_Oracle cursor object and prints trunks with high volume of short-duration calls (< 30 sec, < 1min)
@@ -282,19 +279,19 @@ curs 	= db.cursor()
 
 #"""
 #fetch rows to be examined then perform the High Packet Loss check
-curs.execute('HPL sql query')
+curs.execute('<HPL sql query>')
 alert_pktloss(curs)
 #"""
 
 #"""
 #fetch rows to be examined then perform the route advanceable check
-curs.execute('RTEADV sql query')
+curs.execute('<RTEADV sql query>')
 alert_rteadv(curs)
 #"""
 
 #"""
 #fetch rows to be examined then perform the route advanceable check
-curs.execute('CALLDUR sql query')
+curs.execute('<CALLDUR sql query>')
 alert_calldur(curs)
 #"""
 

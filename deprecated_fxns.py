@@ -44,14 +44,14 @@ def print_hpl_rows(cursor):
 	num_rows = int(input('Enter number of rows to print: '))
 
 	for row in cursor:
-		date 				= str(row[0])
-		trunk 				= row[1]
-		direction 			= str(row[2])
-		attempts 			= row[3]
-		answered 			= row[4]
-		failed 				= row[5]
-		otg_hlpkt_calls 	= row[6]
-		dtg_hlpkt_calls 	= row[7]
+		date 		= str(row[0])
+		trunk 		= row[1]
+		direction 	= str(row[2])
+		attempts 	= row[3]
+		answered 	= row[4]
+		failed 		= row[5]
+		otg_hlpkt_calls	= row[6]
+		dtg_hlpkt_calls = row[7]
 		
 		#if inbound, use OTG high packet loss calls. if outbound, use dtg high packet loss calls.
 		total_hlpkt_calls	= otg_hlpkt_calls if direction == 'I' else dtg_hlpkt_calls
@@ -62,11 +62,11 @@ def print_hpl_rows(cursor):
 
 		if count < num_rows:
 			print('trunk: ' 	+ str(trunk) + '\n' \
-			'Date: ' 			+ date + '\n' \
+			'Date: ' 		+ date + '\n' \
 			'direction: ' 		+ direction + '\n' \
-			'completed calls: ' + str(answered) + '\n' \
-			'otg_hlpkt_calls: ' + str(otg_hlpkt_calls) + '\n' \
-			'dtg_hlpkt_calls: ' + str(dtg_hlpkt_calls) + '\n' \
+			'completed calls: ' 	+ str(answered) + '\n' \
+			'otg_hlpkt_calls: ' 	+ str(otg_hlpkt_calls) + '\n' \
+			'dtg_hlpkt_calls: ' 	+ str(dtg_hlpkt_calls) + '\n' \
 			'percent of calls w/ high pkt loss: ' + str(hlpkt_ratio * 100) + '%\n')
 			count += 1
 		else:

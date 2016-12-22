@@ -4,7 +4,7 @@
 
 Tool for periodically scanning network traffic and generating alerts based on certain conditions. crontab'd shell script on vetools server will run dbtest.py every hour. For each alert, this tool: 
 
-- queries the specific database view for the given alert (packet loss, route advanceable response, call duration)
+- queries the specific database view associated with the given alert (packet loss, route advanceable response, call duration)
 - calls alert function to scan the result set for given conditions
 - calls html generation function to create the alert message and html table
 - sends email to list of recipients via google SMTP.
@@ -16,7 +16,7 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 
 **TODO:** 
 - Switch to local SMTP/incorporate mailx
-- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but greater ease of use.
+- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but better readability.
 
 **Usage:**
 > python dbtest.py

@@ -2,7 +2,7 @@
 
 **Dependencies:** ***Python3***, ***cx_Oracle***, ***HTML.py***
 
-Tool for periodically scanning network traffic and generating alerts based on certain conditions. crontab'd shell script on vetools server will run ~~dbtest.py~~ traffic-alerts.py every hour. For each alert, this tool: 
+Tool for periodically scanning network traffic and generating alerts based on certain conditions. crontab'd shell script on vetools server will run traffic-alerts.py every hour. For each alert, this tool: 
 
 - queries the specific database view associated with the given alert (packet loss, route advanceable response, call duration)
 - calls alert function to scan the result set for given conditions
@@ -19,7 +19,7 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 - If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but better readability.
 
 **Usage:**
-> python dbtest.py
+> python traffic-alerts.py
 
 **Notes:**
 - Some of the formatting looks clean in a text editor but a bit iffy on GitHub.

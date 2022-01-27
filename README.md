@@ -19,7 +19,6 @@ Tool I built during an internship for periodically scanning telecom network traf
 
 **Usage:**
 > python traffic-alerts.py
-> ( but really you want this as a recurring job :) )
 
 **Notes:**
 - Meant for python 3, but runs on python 2.6 with \__future\__ import

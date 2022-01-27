@@ -2,9 +2,9 @@
 
 **Dependencies:** ***Python3***, ***cx_Oracle***, ***HTML.py***
 
-Tool for periodically scanning network traffic and generating alerts based on certain conditions. crontab'd shell script on vetools server will run **traffic-alerts.py** every hour. For each alert, this tool: 
+Tool I built during an internship for periodically scanning telecom network traffic and generating alerts based on certain conditions. A crontabbed shell script on a dev server will run **traffic-alerts.py** every hour. For each alert, this tool: 
 
-- queries the specific database view associated with the given alert (packet loss, route advanceable response, call duration)
+- queries the specific database view pertaining to metrics for the given alert (packet loss, route advanceable response, call duration)
 - calls alert function to scan the result set for given conditions
 - calls html generation function to create the alert message and html table
 - sends email to list of recipients via google SMTP.
@@ -16,13 +16,12 @@ Tool for periodically scanning network traffic and generating alerts based on ce
 
 **TODO:** 
 - Switch to local SMTP/incorporate mailx
-- If possible, instead of using list-of-lists for offenders, have a row object with named attributes for each database field. Higher space requirement, but better readability.
 
 **Usage:**
 > python traffic-alerts.py
+> ( but really you want this as a recurring job :) )
 
 **Notes:**
-- Some of the formatting looks clean in a text editor but a bit iffy on GitHub.
-- Meant for python 3, but is able to run on vetools' python 2.6 with \__future\__ import
-- When implementing new alerts, the function print_fields() in deprecated_fxns.py is useful for lining up database fields with the python program.
+- Meant for python 3, but runs on python 2.6 with \__future\__ import
+- When implementing new alerts, the function print_fields() in deprecated.py is useful for lining up database fields with the python program.
 - More notes in notes.txt :)
